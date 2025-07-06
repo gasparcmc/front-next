@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import axios from '@/lib/axios';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -33,25 +33,32 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // Aquí iría tu lógica de autenticación
-      console.log('Datos del formulario:', formData);
+      // Configurar axios para incluir credenciales y recibir cookies
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, 
+        formData,
+        {
+          withCredentials: true, // Importante: permite recibir cookies del servidor
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
+      );
+
+      // Si el backend envía el token en una cookie HTTP, no necesitas extraerlo del body
+      // La cookie se establecerá automáticamente por el navegador
       
-      // Simular llamada a API
-     // await new Promise(resolve => setTimeout(resolve, 1000));
-
-     const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, formData);
-     const { access_token } = response.data;
-
-     // Guardar el token (localStorage o cookies, según tu estrategia)
-     //version localStorage
-     //localStorage.setItem('token', token);
-     //version cookies
-     document.cookie = `token=${access_token}; path=/`;
-
-      
-      // Si el login es exitoso, redirigir
-      router.push('/core/dashboard');
+      // Verificar si la respuesta fue exitosa
+      if (response.status === 200 || response.status === 201) {
+        // El token ya está en las cookies del navegador
+        console.log('Login exitoso, token guardado en cookies');
+        console.log('Cookies actuales:', document.cookie);
+        
+        // Redirigir al dashboard
+        router.push('/core/dashboard');
+      }
     } catch (err) {
+      console.error('Error en login:', err);
       setError('Credenciales incorrectas');
     } finally {
       setIsLoading(false);
