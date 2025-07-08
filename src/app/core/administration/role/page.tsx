@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/apiClient";
 import ProtectedRoute from "@/app/auth/ProtectedRoute";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,7 @@ interface Role {
 }
 
 export default function RolePage() {
+  const router = useRouter();
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,8 +49,7 @@ export default function RolePage() {
   };
 
   const handleEditRole = (role: Role) => {
-    // TODO: Implementar modal o página para editar rol
-    console.log('Editar rol:', role);
+    router.push(`/core/administration/role/update?id=${role.id}`);
   };
 
   const handleDeleteRole = async (roleId: number) => {
