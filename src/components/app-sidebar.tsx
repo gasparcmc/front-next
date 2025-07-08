@@ -75,6 +75,11 @@ const items = [
         icon: User,
       },
       {
+        title: "Role",
+        url: "/core/administration/role",
+        icon: Shield,
+      },
+            {
         title: "Seguridad",
         url: "/settings/security",
         icon: Shield,
