@@ -304,36 +304,8 @@ export default function ModifyRolePage() {
                 
                 <Separator />
                 
-                <div className="space-y-2">
-                  <Label>ID del Rol</Label>
-                  <div className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
-                    {role.id}
-                  </div>
-                </div>
-
-                <Separator />
                 
-                <div className="space-y-2">
-                  <Label>Permisos Seleccionados</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedAccesses.length > 0 ? (
-                      selectedAccesses.map(accessId => {
-                        const access = allAccesses.find(a => a.id === accessId);
-                        return access ? (
-                          <Badge key={accessId} variant="secondary">
-                            {access.name}
-                          </Badge>
-                        ) : null;
-                      })
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">
-                        No hay permisos seleccionados
-                      </p>
-                    )}
-                  </div>
-                </div>
 
-                <Separator />
                 
                 <div className="space-y-2">
                   <Label>Permisos Disponibles</Label>
