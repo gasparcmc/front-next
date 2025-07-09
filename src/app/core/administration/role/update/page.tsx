@@ -10,17 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Save, Shield } from "lucide-react";
-
-interface Access {
-  id: number;
-  name: string;
-}
-
-interface Role {
-  id: number;
-  name: string;
-  accesses: Access[];
-}
+import { Role, Access } from "../role.interface";
 
 export default function ModifyRolePage() {
   const router = useRouter();
@@ -123,19 +113,16 @@ export default function ModifyRolePage() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
         <div className="p-6">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
           </div>
         </div>
-      </ProtectedRoute>
     );
   }
 
   if (!role) {
     return (
-      <ProtectedRoute>
         <div className="p-6">
           <Card className="border-red-200 bg-red-50">
             <CardContent className="pt-6">
@@ -147,7 +134,6 @@ export default function ModifyRolePage() {
             </CardContent>
           </Card>
         </div>
-      </ProtectedRoute>
     );
   }
 

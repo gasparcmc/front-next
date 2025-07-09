@@ -20,9 +20,15 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
             withCredentials: true, // Envía automáticamente la cookie HttpOnly
           }
         );
-
         // Si la petición es exitosa, significa que la cookie existe y es válida
-        console.log("Cookie de token encontrada");
+      
+        if (response.status === 200) {
+          console.log("Cookie de token encontrada");
+          setChecked(true);
+        } else {
+          router.push("/auth/login");
+        }
+
         setChecked(true);
       } catch (error) {
         console.error("No se encontró cookie de token válida:", error);
