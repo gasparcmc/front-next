@@ -64,7 +64,7 @@ export default function ModifyRolePage() {
 
   const fetchAllAccesses = async () => {
     try {
-      const data = await apiClient<Access[]>('/access');
+      const data = await apiClient<Access[]>('/role/access');
       setAllAccesses(data);
     } catch (err: any) {
       console.error('Error al obtener accesos:', err);
