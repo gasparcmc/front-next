@@ -128,11 +128,16 @@ export default function ModifyRolePage() {
       setError(null);
       setSuccess(null);
 
+      // Crear array de objetos con id para los accesos seleccionados
+      const selectedAccessObjects = selectedAccesses.map(accessId => ({
+        id: accessId
+      }));
+
       await apiClient(`/role/${roleId}`, {
         method: 'PUT',
         body: {
           name: roleName.trim(),
-          accessIds: selectedAccesses
+          accesses: selectedAccessObjects
         }
       });
 
