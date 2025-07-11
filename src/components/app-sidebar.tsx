@@ -65,17 +65,17 @@ const items = [
     ],
   },
   {
-    title: "Settings",
+    title: "Administracion",
     icon: Settings,
     hasSubmenu: true,
     subItems: [
       {
-        title: "Perfil",
-        url: "/settings/profile",
+        title: "Usuarios",
+        url: "/core/administration/user",
         icon: User,
       },
       {
-        title: "Role",
+        title: "Roles",
         url: "/core/administration/role",
         icon: Shield,
       },
