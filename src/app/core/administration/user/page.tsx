@@ -7,12 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Users } from "lucide-react";
+import { User } from "./user.interfase";
 
-interface User {
-  id: number;
-  username: string;
-  email: string;
-}
 
 export default function UserPage() {
   const router = useRouter();

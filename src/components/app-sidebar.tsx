@@ -52,19 +52,6 @@ const items = [
     ],
   },
   {
-    title: "Configuracion",
-    url: "/configuracion",
-    icon: Search,
-    hasSubmenu: true,
-    subItems: [
-      {
-        title: "Proveedores",
-        url: "/core/administration/proveedores",
-        icon: User,
-      },
-    ],
-  },
-  {
     title: "Administracion",
     icon: Settings,
     hasSubmenu: true,
@@ -78,16 +65,6 @@ const items = [
         title: "Roles",
         url: "/core/administration/role",
         icon: Shield,
-      },
-            {
-        title: "Seguridad",
-        url: "/settings/security",
-        icon: Shield,
-      },
-      {
-        title: "Notificaciones",
-        url: "/settings/notifications",
-        icon: Bell,
       },
     ],
   },
