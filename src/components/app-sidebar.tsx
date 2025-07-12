@@ -19,58 +19,50 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 
-// Menu items con submenús
-const items = [
-  {
-    title: "Home",
-    url: "/",
-    icon: Home,
-  },
-  {
-    title: "Ventas",
-    url: "/ventas",
-    icon: Receipt,
-    hasSubmenu: true,
-    subItems: [
-      {
-        title: "Proveedores",
-        url: "/settings/profile",
-        icon: User,
-      },
-    ],
-  },
-  {
-    title: "Compras",
-    icon: Receipt,
-    hasSubmenu: true,
-    subItems: [
-      {
-        title: "Proveedores",
-        url: "/core/administration/proveedores",
-        icon: User,
-      },
-    ],
-  },
-  {
-    title: "Administracion",
-    icon: Settings,
-    hasSubmenu: true,
-    subItems: [
-      {
-        title: "Usuarios",
-        url: "/core/administration/user",
-        icon: User,
-      },
-      {
-        title: "Roles",
-        url: "/core/administration/role",
-        icon: Shield,
-      },
-    ],
-  },
-]
+import { apiClient } from "@/lib/apiClient"
+import { useEffect, useState } from "react"
+
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: string;
+  hasSubmenu?: boolean;
+  subItems?: MenuItem[];
+}
+
+
+
 
 export function AppSidebar() {
+
+  const [items, setItems] = useState<MenuItem[]>([]);
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+
+  const iconMap = {
+    Home: Home,
+    User: User,
+    Settings: Settings,
+    Search: Search,
+    Calendar: Calendar,
+    Receipt: Receipt,
+    Shield: Shield,
+    Bell: Bell,
+  } as const;
+
+  function getIcon(iconName: string) {
+    console.log('Icon name received:', iconName); // Para debug
+    const IconComponent = iconMap[iconName as keyof typeof iconMap] || Home;
+    return <IconComponent className="h-4 w-4" />;
+  }
+
+  const fetchItems = async () => {
+    const data = await apiClient<MenuItem[]>('user/menu');
+    setItems(data);
+  }
+
   return (
     <Sidebar collapsible="icon">
       <SidebarContent>
@@ -88,7 +80,7 @@ export function AppSidebar() {
                         className="border-none [&[data-state=open]]:bg-sidebar-accent"
                       >
                         <AccordionTrigger className="hover:no-underline [&[data-state=open]>svg]:rotate-180 flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0">
-                          <item.icon />
+                          {getIcon(item.icon)}
                           <span>{item.title}</span>
                         </AccordionTrigger>
                         <AccordionContent className="pt-0">
@@ -97,7 +89,7 @@ export function AppSidebar() {
                               <SidebarMenuItem key={subItem.title}>
                                 <SidebarMenuButton asChild>
                                   <a href={subItem.url}>
-                                    <subItem.icon />
+                                    {getIcon(subItem.icon)}
                                     <span>{subItem.title}</span>
                                   </a>
                                 </SidebarMenuButton>
@@ -111,7 +103,7 @@ export function AppSidebar() {
                     // Item normal sin submenú
                     <SidebarMenuButton asChild>
                       <a href={item.url}>
-                        <item.icon />
+                        {getIcon(item.icon)}
                         <span>{item.title}</span>
                       </a>
                     </SidebarMenuButton>
