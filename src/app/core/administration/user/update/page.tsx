@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Save, Users } from "lucide-react";
-import { User } from "../user.interfase";
+import { User, Role } from "../user.interfase";
 
 export default function ModifyUserPage() {
   const router = useRouter();
@@ -23,10 +23,13 @@ export default function ModifyUserPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
+  const [allRoles, setAllRoles] = useState<Role[]>([]);
 
   useEffect(() => {
     if (userId) {
       fetchUser();
+      fetchAllRoles();
     } else {
       setError("ID de usuario no proporcionado");
       setLoading(false);
@@ -40,12 +43,22 @@ export default function ModifyUserPage() {
       setUser(data);
       setUsername(data.username);
       setEmail(data.email);
+      setSelectedRoles(data.roles.map(role => role.id));
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Error al cargar el usuario');
       console.error('Error al obtener usuario:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAllRoles = async () => {
+    try {
+      const data = await apiClient<Role[]>('/role');
+      setAllRoles(data);
+    } catch (err: any) {
+      console.error('Error al obtener roles:', err);
     }
   };
 
@@ -72,11 +85,17 @@ export default function ModifyUserPage() {
       setError(null);
       setSuccess(null);
 
+      // Crear array de objetos con id para los roles seleccionados
+      const selectedRoleObjects = selectedRoles.map(roleId => ({
+        id: roleId
+      }));
+
       await apiClient(`/user/${userId}`, {
         method: 'PUT',
         body: {
           username: username.trim(),
-          email: email.trim()
+          email: email.trim(),
+          roles: selectedRoleObjects
         }
       });
 
@@ -88,6 +107,18 @@ export default function ModifyUserPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const toggleRole = (roleId: number) => {
+    setSelectedRoles(prev => 
+      prev.includes(roleId) 
+        ? prev.filter(id => id !== roleId)
+        : [...prev, roleId]
+    );
+  };
+
+  const isRoleSelected = (roleId: number) => {
+    return selectedRoles.includes(roleId);
   };
 
   const handleBack = () => {
@@ -196,6 +227,37 @@ export default function ModifyUserPage() {
                   <Label>ID del Usuario</Label>
                   <div className="p-3 bg-gray-50 rounded-md">
                     <span className="text-sm text-gray-600">{user.id}</span>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <Label>Roles Asignados</Label>
+                  <div className="space-y-1 max-h-96 overflow-y-auto border rounded-md p-4">
+                    {allRoles.length > 0 ? (
+                      allRoles.map((role) => (
+                        <div key={role.id} className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-50 transition-colors">
+                          <input
+                            type="checkbox"
+                            id={`role-${role.id}`}
+                            checked={isRoleSelected(role.id)}
+                            onChange={() => toggleRole(role.id)}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                          <Label 
+                            htmlFor={`role-${role.id}`}
+                            className="text-sm font-normal cursor-pointer"
+                          >
+                            {role.name}
+                          </Label>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">
+                        No hay roles disponibles
+                      </p>
+                    )}
                   </div>
                 </div>
               </CardContent>
