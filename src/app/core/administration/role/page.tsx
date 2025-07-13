@@ -45,7 +45,8 @@ export default function RolePage() {
 
   const handleCreateRole = () => {
     // TODO: Implementar modal o página para crear rol
-    console.log('Crear nuevo rol');
+    //console.log('Crear nuevo rol');
+    router.push('/core/administration/role/insert');
   };
 
   const handleEditRole = (role: Role) => {

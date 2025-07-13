@@ -53,9 +53,8 @@ export function AppSidebar() {
   } as const;
 
   function getIcon(iconName: string) {
-    console.log('Icon name received:', iconName); // Para debug
     const IconComponent = iconMap[iconName as keyof typeof iconMap] || Home;
-    return <IconComponent className="h-4 w-4" />;
+    return <IconComponent/>;
   }
 
   const fetchItems = async () => {
