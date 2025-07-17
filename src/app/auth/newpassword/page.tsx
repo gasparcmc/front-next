@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { apiClient } from '@/lib/apiClient';
 
 export default function NewPasswordPage() {
   const [password, setPassword] = useState('');
@@ -36,25 +37,33 @@ export default function NewPasswordPage() {
     }
     setIsLoading(true);
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/new-password`,
-        { token, password },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      const response = await apiClient<{ success: boolean, message: string }>('/auth/resetPassword', {
+        method: 'POST',
+        body: {
+          token,
+          password
         }
-      );
-      if (response.status === 200 || response.status === 201) {
-        setSuccess('¡Contraseña actualizada correctamente! Ahora puedes iniciar sesión.');
-        setTimeout(() => router.push('/auth/login'), 2000);
-      }
-    } catch (err) {
+      });
+
+      if (response.success) {
+      setSuccess('Contraseña actualizada correctamente');
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 2000);
+
+      return {
+        success: true,
+        message: 'Contraseña reiniciada exitosamente'
+      };
+
+    }
+  } catch (err) {
       setError('Hubo un error al actualizar la contraseña.');
     } finally {
       setIsLoading(false);
     }
-  };
+  
+  }
 
   return (
     <Card className="w-full max-w-sm">
