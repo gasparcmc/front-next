@@ -59,13 +59,19 @@ export async function apiClient<T>(
     return response.data;
   } catch (error: any) {
     if (error.response) {
-      const errorMessage = error.response.data?.message || 
-                          error.response.data?.error || 
-                          `Error ${error.response.status}: ${error.response.statusText}`;
+      const data = error.response.data;
+      console.log('Respuesta de error del backend:', data); // <-- LOG 1
+      let errorMessage = data?.message || data?.error || `Error ${error.response.status}: ${error.response.statusText}`;
+      if (Array.isArray(errorMessage)) {
+        errorMessage = errorMessage.join(', ');
+      }
+      console.log('Mensaje de error procesado:', errorMessage); // <-- LOG 2
       throw new Error(errorMessage);
     } else if (error.request) {
+      console.log('No se recibió respuesta del backend:', error.request); // <-- LOG 3
       throw new Error('Error de conexión. Verifica tu conexión a internet.');
     } else {
+      console.log('Error desconocido:', error.message); // <-- LOG 4
       throw new Error(error.message || 'Error desconocido');
     }
   }

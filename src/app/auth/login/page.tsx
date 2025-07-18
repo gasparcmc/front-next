@@ -37,7 +37,7 @@ export default function LoginPage() {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, 
         formData,
-        {
+        { 
           withCredentials: true, // Importante: permite recibir cookies del servidor
           headers: {
             'Content-Type': 'application/json',
@@ -82,7 +82,7 @@ export default function LoginPage() {
 
           
         <CardAction>
-          <Button variant="link">Registrate</Button>
+          <Button variant="link" onClick={() => router.push('/auth/register')}>Registrate</Button>
         </CardAction>
       </CardHeader>
       <CardContent>
@@ -104,7 +104,7 @@ export default function LoginPage() {
               <div className="flex items-center">
                 <Label htmlFor="password">Contraseña</Label>
                 <a
-                  href="#"
+                  href="/auth/resetpassword"
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
                   Olvidaste tu contraseña?
