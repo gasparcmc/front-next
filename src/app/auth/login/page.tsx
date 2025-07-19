@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from '@/lib/axios';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { apiClient } from '@/lib/apiClient';
 
 
 
@@ -33,23 +33,16 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // Configurar axios para incluir credenciales y recibir cookies
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/login`, 
-        formData,
-        { 
-          withCredentials: true, // Importante: permite recibir cookies del servidor
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        }
-      );
+      const response = await apiClient<{ success: boolean, message: string }>('/auth/login', {
+        method: 'POST',
+        body: formData
+      });
 
       // Si el backend envía el token en una cookie HTTP, no necesitas extraerlo del body
       // La cookie se establecerá automáticamente por el navegador
       
       // Verificar si la respuesta fue exitosa
-      if (response.status === 200 || response.status === 201) {
+      if (response.success) {
         // El token ya está en las cookies del navegador
         console.log('Login exitoso, token guardado en cookies');
         console.log('Cookies actuales:', document.cookie);
@@ -57,8 +50,8 @@ export default function LoginPage() {
         // Redirigir al dashboard
         router.push('/core/dashboard');
       }
-    } catch (err) {
-      console.error('Error en login:', err);
+    } catch (err: any) {
+      console.error('Error en login:', err.message);
       setError('Credenciales incorrectas');
     } finally {
       setIsLoading(false);

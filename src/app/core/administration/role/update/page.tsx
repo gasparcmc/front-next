@@ -133,7 +133,7 @@ export default function ModifyRolePage() {
         id: accessId
       }));
 
-      await apiClient(`/role/${roleId}`, {
+      const response = await apiClient<{ success: boolean, message: string }>(`/role/${roleId}`, {
         method: 'PUT',
         body: {
           name: roleName.trim(),
@@ -141,9 +141,15 @@ export default function ModifyRolePage() {
         }
       });
 
+      if (response.success) {
+
       setSuccess("Rol actualizado correctamente");
       await fetchRole();
       setTimeout(() => setSuccess(null), 3000);
+
+      } else {
+        setError(response.message || 'Error al actualizar el rol');
+      }
     } catch (err: any) {
       setError(err.message || 'Error al actualizar el rol');
     } finally {

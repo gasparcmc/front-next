@@ -33,6 +33,7 @@ export default function CreateUserPage() {
     try {
       setLoading(true);
       const data = await apiClient<Role[]>('/role');
+
       setAllRoles(data);
     } catch (err: any) {
       setError('Error al cargar los roles disponibles');
@@ -86,7 +87,7 @@ export default function CreateUserPage() {
         id: roleId
       }));
 
-      await apiClient('/user', {
+      const response = await apiClient<{ success: boolean, message: string }>('/user', {
         method: 'POST',
         body: {
           username: username.trim(),
@@ -96,16 +97,22 @@ export default function CreateUserPage() {
         }
       });
 
-      setSuccess("Usuario creado correctamente");
-      setUsername("");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      setSelectedRoles([]);
-      setTimeout(() => {
-        setSuccess(null);
-        router.push('/core/administration/user');
-      }, 2000);
+      if (response.success) {
+
+        setSuccess("Usuario creado correctamente");
+        setUsername("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setSelectedRoles([]);
+        setTimeout(() => {
+          setSuccess(null);
+          router.push('/core/administration/user');
+        }, 2000);
+      } else {
+        setError(response.message || 'Error al crear el usuario');
+      }
+
     } catch (err: any) {
       setError(err.message || 'Error al crear el usuario');
     } finally {
@@ -114,8 +121,8 @@ export default function CreateUserPage() {
   };
 
   const toggleRole = (roleId: number) => {
-    setSelectedRoles(prev => 
-      prev.includes(roleId) 
+    setSelectedRoles(prev =>
+      prev.includes(roleId)
         ? prev.filter(id => id !== roleId)
         : [...prev, roleId]
     );
@@ -152,8 +159,8 @@ export default function CreateUserPage() {
                   </p>
                 </div>
               </div>
-              <Button 
-                onClick={handleSave} 
+              <Button
+                onClick={handleSave}
                 disabled={saving}
                 className="flex items-center gap-2"
               >
@@ -201,9 +208,9 @@ export default function CreateUserPage() {
                     placeholder="Ingresa el nombre de usuario"
                   />
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -256,7 +263,7 @@ export default function CreateUserPage() {
                             onChange={() => toggleRole(role.id)}
                             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                           />
-                          <Label 
+                          <Label
                             htmlFor={`role-${role.id}`}
                             className="text-sm font-normal cursor-pointer"
                           >

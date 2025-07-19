@@ -90,7 +90,7 @@ export default function ModifyUserPage() {
         id: roleId
       }));
 
-      await apiClient(`/user/${userId}`, {
+      const response = await apiClient<{ success: boolean, message: string }>(`/user/${userId}`, {
         method: 'PUT',
         body: {
           username: username.trim(),
@@ -99,9 +99,15 @@ export default function ModifyUserPage() {
         }
       });
 
+      if (response.success) {
+
       setSuccess("Usuario actualizado correctamente");
       await fetchUser();
       setTimeout(() => setSuccess(null), 3000);
+
+      } else {
+        setError(response.message || 'Error al actualizar el usuario');
+      }
     } catch (err: any) {
       setError(err.message || 'Error al actualizar el usuario');
     } finally {

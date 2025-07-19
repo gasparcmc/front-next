@@ -111,13 +111,15 @@ export default function CreateRolePage() {
         id: accessId
       }));
 
-      await apiClient('/role', {
+      const response = await apiClient<{ success: boolean, message: string }>('/role', {
         method: 'POST',
         body: {
           name: roleName.trim(),
           accesses: selectedAccessObjects
         }
       });
+
+      if (response.success) {
 
       setSuccess("Rol creado correctamente");
       setRoleName("");
@@ -126,6 +128,10 @@ export default function CreateRolePage() {
         setSuccess(null);
         router.push('/core/administration/role');
       }, 2000);
+
+      } else {
+        setError(response.message || 'Error al crear el rol');
+      }
     } catch (err: any) {
       setError(err.message || 'Error al crear el rol');
     } finally {
