@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import axios from '@/lib/axios';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/apiClient';
+import { Suspense } from "react";
 
-export default function NewPasswordPage() {
+function NewPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -57,8 +57,8 @@ export default function NewPasswordPage() {
       };
 
     }
-  } catch (err) {
-      setError('Hubo un error al actualizar la contraseña.');
+  } catch (err: unknown) {
+      setError('Hubo un error al actualizar la contraseña.'+(err instanceof Error ? err.message : 'Error desconocido'));
     } finally {
       setIsLoading(false);
     }
@@ -119,5 +119,13 @@ export default function NewPasswordPage() {
         </Button>
       </CardFooter>
     </Card>
+  );
+}
+
+export default function PageWithSuspense() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <NewPasswordPage />
+    </Suspense>
   );
 }

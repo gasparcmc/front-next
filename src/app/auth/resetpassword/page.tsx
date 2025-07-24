@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from '@/lib/axios';
+import { apiClient } from '@/lib/apiClient';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -25,20 +25,17 @@ export default function ResetPasswordPage() {
     setError('');
     setSuccess('');
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/reset-password`,
-        { email },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      const response = await apiClient<{ success: boolean, message: string }>('/auth/resetPassword', {
+        method: 'POST',
+        body: {
+          email
         }
-      );
-      if (response.status === 200 || response.status === 201) {
+      });
+      if (response.success) {
         setSuccess('Si el correo existe, recibirás instrucciones para restablecer tu contraseña.');
       }
-    } catch (err) {
-      setError('Hubo un error al intentar restablecer la contraseña.');
+    } catch (err: unknown) {  
+      setError('Hubo un error al intentar restablecer la contraseña.'+(err instanceof Error ? err.message : 'Error desconocido'));
     } finally {
       setIsLoading(false);
     }

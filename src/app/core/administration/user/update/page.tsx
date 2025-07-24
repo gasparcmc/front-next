@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/apiClient";
 import ProtectedRoute from "@/app/auth/ProtectedRoute";
@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Save, Users } from "lucide-react";
 import { User, Role } from "../user.interfase";
 
-export default function ModifyUserPage() {
+function ModifyUserPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get('id');
@@ -26,17 +26,12 @@ export default function ModifyUserPage() {
   const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
   const [allRoles, setAllRoles] = useState<Role[]>([]);
 
-  useEffect(() => {
-    if (userId) {
-      fetchUser();
-      fetchAllRoles();
-    } else {
+  const loadUserData = useCallback(async () => {
+    if (!userId) {
       setError("ID de usuario no proporcionado");
       setLoading(false);
+      return;
     }
-  }, [userId]);
-
-  const fetchUser = async () => {
     try {
       setLoading(true);
       const data = await apiClient<User>(`/user/${userId}`);
@@ -45,22 +40,20 @@ export default function ModifyUserPage() {
       setEmail(data.email);
       setSelectedRoles(data.roles.map(role => role.id));
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar el usuario');
-      console.error('Error al obtener usuario:', err);
+
+      const roles = await apiClient<Role[]>("/role");
+      setAllRoles(roles);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al cargar datos');
+      console.error('Error al cargar datos:', err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  const fetchAllRoles = async () => {
-    try {
-      const data = await apiClient<Role[]>('/role');
-      setAllRoles(data);
-    } catch (err: any) {
-      console.error('Error al obtener roles:', err);
-    }
-  };
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData]);
 
   const handleSave = async () => {
     if (!username.trim()) {
@@ -100,16 +93,14 @@ export default function ModifyUserPage() {
       });
 
       if (response.success) {
-
-      setSuccess("Usuario actualizado correctamente");
-      await fetchUser();
-      setTimeout(() => setSuccess(null), 3000);
-
+        setSuccess("Usuario actualizado correctamente");
+        await loadUserData();
+        setTimeout(() => setSuccess(null), 3000);
       } else {
         setError(response.message || 'Error al actualizar el usuario');
       }
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar el usuario');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al actualizar el usuario');
     } finally {
       setSaving(false);
     }
@@ -272,5 +263,13 @@ export default function ModifyUserPage() {
         )}
       </div>
     </ProtectedRoute>
+  );
+}
+
+export default function PageWithSuspense() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <ModifyUserPage />
+    </Suspense>
   );
 }

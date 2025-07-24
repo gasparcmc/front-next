@@ -35,9 +35,9 @@ export default function RolePage() {
       const data = await apiClient<Role[]>('/role');
       setRoles(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar los roles');
-      console.error('Error al obtener roles:', err);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al cargar los roles');
+      console.error('Error al obtener roles:', err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
     }
@@ -58,8 +58,8 @@ export default function RolePage() {
       try {
         await apiClient(`/role/${roleId}`, { method: 'DELETE' });
         fetchRoles(); // Recargar la lista
-      } catch (err: any) {
-        setError(err.message || 'Error al eliminar el rol');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Error al eliminar el rol');
       }
     }
   };

@@ -35,9 +35,9 @@ export default function CreateUserPage() {
       const data = await apiClient<Role[]>('/role');
 
       setAllRoles(data);
-    } catch (err: any) {
-      setError('Error al cargar los roles disponibles');
-      console.error('Error al obtener roles:', err);
+    } catch (err: unknown) {
+      setError('Error al cargar los roles disponibles'+(err instanceof Error ? err.message : 'Error desconocido'));
+      console.error('Error al obtener roles:', err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
     }
@@ -113,8 +113,8 @@ export default function CreateUserPage() {
         setError(response.message || 'Error al crear el usuario');
       }
 
-    } catch (err: any) {
-      setError(err.message || 'Error al crear el usuario');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al crear el usuario');
     } finally {
       setSaving(false);
     }

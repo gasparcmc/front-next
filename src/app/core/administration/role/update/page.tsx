@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/apiClient";
 import ProtectedRoute from "@/app/auth/ProtectedRoute";
@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Save, Shield, ChevronRight, ChevronDown } from "lucide-react";
 import { Role, Access } from "../role.interface";
@@ -16,7 +15,7 @@ interface HierarchicalAccess extends Access {
   children?: HierarchicalAccess[];
 }
 
-export default function ModifyRolePage() {
+function ModifyRolePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const roleId = searchParams.get('id');
@@ -31,17 +30,12 @@ export default function ModifyRolePage() {
   const [allAccesses, setAllAccesses] = useState<Access[]>([]);
   const [expandedParents, setExpandedParents] = useState<number[]>([]);
 
-  useEffect(() => {
-    if (roleId) {
-      fetchRole();
-      fetchAllAccesses();
-    } else {
+  const loadRoleData = useCallback(async () => {
+    if (!roleId) {
       setError("ID de rol no proporcionado");
       setLoading(false);
+      return;
     }
-  }, [roleId]);
-
-  const fetchRole = async () => {
     try {
       setLoading(true);
       const data = await apiClient<Role>(`/role/${roleId}`);
@@ -49,22 +43,20 @@ export default function ModifyRolePage() {
       setRoleName(data.name);
       setSelectedAccesses(data.accesses.map(access => access.id));
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar el rol');
-      console.error('Error al obtener rol:', err);
+
+      const accesses = await apiClient<Access[]>('/role/access');
+      setAllAccesses(accesses);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al cargar datos');
+      console.error('Error al cargar datos:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [roleId]);
 
-  const fetchAllAccesses = async () => {
-    try {
-      const data = await apiClient<Access[]>('/role/access');
-      setAllAccesses(data);
-    } catch (err: any) {
-      console.error('Error al obtener accesos:', err);
-    }
-  };
+  useEffect(() => {
+    loadRoleData();
+  }, [loadRoleData]);
 
   // Función para organizar accesos jerárquicamente
   const organizeAccessesHierarchically = (accesses: Access[]): HierarchicalAccess[] => {
@@ -144,14 +136,14 @@ export default function ModifyRolePage() {
       if (response.success) {
 
       setSuccess("Rol actualizado correctamente");
-      await fetchRole();
+      await loadRoleData(); // Reutilizas la función
       setTimeout(() => setSuccess(null), 3000);
 
       } else {
         setError(response.message || 'Error al actualizar el rol');
       }
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar el rol');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al actualizar el rol');
     } finally {
       setSaving(false);
     }
@@ -336,5 +328,13 @@ export default function ModifyRolePage() {
         )}
       </div>
     </ProtectedRoute>
+  );
+}
+
+export default function PageWithSuspense() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <ModifyRolePage />
+    </Suspense>
   );
 }

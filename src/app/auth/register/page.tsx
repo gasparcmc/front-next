@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, CardAction } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { apiClient } from '@/lib/apiClient';
 import { useSearchParams } from 'next/navigation';
 
-export default function RegisterPage() {
+function RegisterPage() {
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -33,8 +33,8 @@ export default function RegisterPage() {
         } else {
             setError(response.message || 'Error al confirmar el usuario.');
         }
-    } catch (err: any) {
-        setError(err.message || 'Error al confirmar el usuario.');
+    } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Error al confirmar el usuario.');
     }
     }
 
@@ -71,8 +71,8 @@ export default function RegisterPage() {
             } else {
                 setError(response.message || 'Error al registrar usuario.');
             }
-        } catch (err: any) {
-            setError(err.message || 'Error al registrar usuario.');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Error al registrar usuario.');
         } finally {
             setIsLoading(false);
         }
@@ -148,4 +148,12 @@ export default function RegisterPage() {
             </CardFooter>
         </Card>
     );
+}
+
+export default function PageWithSuspense() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <RegisterPage />
+    </Suspense>
+  );
 }

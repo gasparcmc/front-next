@@ -26,9 +26,9 @@ export default function UserPage() {
       const data = await apiClient<User[]>('/user');
       setUsers(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar los usuarios');
-      console.error('Error al obtener usuarios:', err);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al cargar los usuarios');
+      console.error('Error al obtener usuarios:', err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
     }
@@ -47,8 +47,8 @@ export default function UserPage() {
       try {
         await apiClient(`/user/${userId}`, { method: 'DELETE' });
         fetchUsers(); // Recargar la lista
-      } catch (err: any) {
-        setError(err.message || 'Error al eliminar el usuario');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Error al eliminar el usuario');
       }
     }
   };

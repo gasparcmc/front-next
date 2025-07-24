@@ -36,9 +36,9 @@ export default function CreateRolePage() {
       setLoading(true);
       const data = await apiClient<Access[]>('/role/access');
       setAllAccesses(data);
-    } catch (err: any) {
-      setError('Error al cargar los permisos disponibles');
-      console.error('Error al obtener accesos:', err);
+    } catch (err: unknown) {
+      setError('Error al cargar los permisos disponibles'+(err instanceof Error ? err.message : 'Error desconocido'));
+      console.error('Error al obtener accesos:', err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
     }
@@ -132,8 +132,8 @@ export default function CreateRolePage() {
       } else {
         setError(response.message || 'Error al crear el rol');
       }
-    } catch (err: any) {
-      setError(err.message || 'Error al crear el rol');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error al crear el rol');
     } finally {
       setSaving(false);
     }

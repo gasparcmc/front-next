@@ -50,8 +50,8 @@ export default function LoginPage() {
         // Redirigir al dashboard
         router.push('/core/dashboard');
       }
-    } catch (err: any) {
-      console.error('Error en login:', err.message);
+    } catch (err: unknown) {
+      console.error('Error en login:', err instanceof Error ? err.message : 'Error desconocido');
       setError('Credenciales incorrectas');
     } finally {
       setIsLoading(false);
