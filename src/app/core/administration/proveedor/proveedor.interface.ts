@@ -8,4 +8,6 @@ export interface Proveedor {
  web: string;
  observaciones: string;
  estado: string;
+ cuit: string;
+ portada: string;
 }

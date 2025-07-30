@@ -52,9 +52,9 @@ export default function Proveedores() {
   const getEstadoColor = (estado: string) => {
     console.log(estado);
     switch (estado) {
-      case 'activo':
+      case 'Activo':
         return 'bg-green-100 text-green-800';
-      case 'inactivo':
+      case 'Inactivo':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';

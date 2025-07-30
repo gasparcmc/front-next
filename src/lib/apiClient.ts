@@ -56,6 +56,7 @@ export async function apiClient<T>(
 
   try {
     const response: AxiosResponse<T> = await apiInstance(axiosConfig);
+    console.log('Respuesta exitosa del backend:', response); // <-- LOG ÉXITO
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
