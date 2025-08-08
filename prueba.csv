@@ -1,0 +1,4 @@
+id,nombre,descripcion,precio,categoria,subcategoria,marca
+1,Producto A,Descripción del producto A,1000,Electrónica,Audio,Sony
+2,Producto B,Descripción del producto B,2500,Hogar,Cocina,Philips
+3,Producto C,Descripción del producto C,500,Deportes,Fitness,Adidas

@@ -1,6 +1,6 @@
 "use client";
-import { useState, Suspense, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { apiClient } from "@/lib/apiClient";
 import ProtectedRoute from "@/app/auth/ProtectedRoute";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Save, ImagePlus } from "lucide-react";
 import { Proveedor } from "../../proveedor/proveedor.interface";
+import { Producto } from "../producto.interface";
+import { useSearchParams } from "next/navigation";
+import ProductoPreviewCard from "@/components/ProductoPreviewCard";
 
 
-function InsertProductoPage() {
+function UpdateProductoPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const productoId = searchParams.get('id');
+  console.log(productoId);
 
   // Estados del producto
   const [nombre, setNombre] = useState("");
@@ -25,54 +31,83 @@ function InsertProductoPage() {
   const [marca, setMarca] = useState("");
   const [galeriaFiles, setGaleriaFiles] = useState<File[]>([]);
   const [galeriaPreviews, setGaleriaPreviews] = useState<string[]>([]);
-  const [portadaIndex, setPortadaIndex] = useState<number>(0); // índice de la imagen portada
+  const [portadaIndex, setPortadaIndex] = useState<number>(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [proveedor, setProveedor] = useState<Proveedor[]>([]);
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState<string>("");
+  const [updateFile, setUpdateFile] = useState<boolean>(false);
 
 
+  // URL de la galería
+  const baseUrl = process.env.NEXT_PUBLIC_BACKEND_URL +   '/uploads/galeria';
+
+  // Cargar datos del producto y proveedores
   useEffect(() => {
+    const fetchData = async () => {
+      const prod = await apiClient<Producto>(`/producto/${productoId}`, { method: "GET" });
+      console.log(prod);
+      setNombre(prod.nombre || "");
+      setDescripcion(prod.descripcion || "");
+      setPrecio(Number(prod.precio) || 0);
+      setCategoria(prod.categoria || "");
+      setSubcategoria(prod.subcategoria || "");
+      setMarca(prod.marca || "");
+      setProveedorSeleccionado(prod.proveedorId ? prod.proveedorId.toString() : "");
+
+      // Si hay galería, cargar previews (asumiendo URLs)
+      if (prod.galeria && Array.isArray(prod.galeria)) {
+        // Cargar previews y archivos
+        setGaleriaPreviews(prod.galeria.map((img: string) => `${baseUrl}/${img}`));
+        // Cargar archivos
+        (async () => {
+          setGaleriaFiles(await Promise.all(
+            prod.galeria.map(img =>
+              fetch(`${baseUrl}/${img}`)
+                .then(res => res.blob())
+                .then(blob => new File([blob], img, { type: blob.type }))
+            )
+          ));
+        })();
+
+        setPortadaIndex(Number(prod.portada))
+
+      }
+    };
     const fetchProveedores = async () => {
       const proveedores = await apiClient<Proveedor[]>("/proveedor", { method: "GET" });
       setProveedor(proveedores);
     };
-    fetchProveedores();
+    if (productoId) {
+      fetchData();
+      fetchProveedores();
+    }
   }, []);
 
   // Manejar selección de galería
   const handleGaleriaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-
+    setUpdateFile(true);
     const files = Array.from(e.target.files || []);
     setGaleriaFiles(prev => [...prev, ...files]);
     setGaleriaPreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
-    setPortadaIndex(0); // por defecto la primera es portada
+    setPortadaIndex(0);
   };
 
-  // Función para eliminar una imagen de la galería
+  // Eliminar imagen de la galería
   const handleRemoveImage = (removeIdx: number) => {
+    setUpdateFile(true);
     setGaleriaFiles(prev => prev.filter((_, idx) => idx !== removeIdx));
     setGaleriaPreviews(prev => prev.filter((_, idx) => idx !== removeIdx));
-
-    // Ajustar el índice de portada
     setPortadaIndex(prevPortada => {
-      if (removeIdx === prevPortada) {
-        // Si se elimina la portada, la nueva portada será la primera (si hay imágenes)
-        return 0;
-      } else if (removeIdx < prevPortada) {
-        // Si se elimina una imagen antes de la portada, el índice de portada disminuye en 1
-        return prevPortada - 1;
-      } else {
-        // Si se elimina una imagen después de la portada, el índice no cambia
-        return prevPortada;
-      }
+      if (removeIdx === prevPortada) return 0;
+      else if (removeIdx < prevPortada) return prevPortada - 1;
+      else return prevPortada;
     });
   };
 
-  // Guardar producto y subir imágenes
+  // Guardar cambios
   const handleSave = async () => {
-    // Validaciones básicas
     if (!nombre.trim() || nombre.length < 3) {
       setError("El nombre es requerido y debe tener al menos 3 caracteres");
       return;
@@ -93,86 +128,72 @@ function InsertProductoPage() {
       setError("La marca es requerida");
       return;
     }
-    if (galeriaFiles.length === 0) {
-      setError("Debes subir al menos una imagen a la galería");
+    if (!proveedorSeleccionado) {
+      setError("El proveedor es requerido");
       return;
     }
-
+    // No obligo galeriaFiles, puede mantener las imágenes actuales
     try {
       setSaving(true);
       setError(null);
       setSuccess(null);
-
-      // 1. Insertar producto (sin portada ni galería)
-      const productoResponse = await apiClient<{
-        id: number;
-        message: string;
-        success: boolean;
-      }>(
-        "/producto",
-        {
-          method: "POST",
-          body: {
-            nombre: nombre.trim(),
-            descripcion: descripcion.trim(),
-            precio,
-            categoria: categoria.trim(),
-            subcategoria: subcategoria.trim(),
-            marca: marca.trim(),
-            portada: "",
-            galeria: [],
-            proveedor_id: proveedorSeleccionado ? Number(proveedorSeleccionado) : 0,
-          }
+      // Actualizar producto
+      await apiClient<any>(`/producto/${productoId}`, {
+        method: "PUT",
+        body: {
+          nombre: nombre.trim(),
+          descripcion: descripcion.trim(),
+          precio,
+          categoria: categoria.trim(),
+          subcategoria: subcategoria.trim(),
+          marca: marca.trim(),
+          proveedor_id: proveedorSeleccionado ? Number(proveedorSeleccionado) : 0,
+          fileModificado: updateFile,
         }
-      );
-
-      if (!productoResponse.success) {
-        setError(productoResponse.message || "Error al crear el producto");
-        return;
-      }
-
-      // 2. Subir galería
-      //const galeriaUrls: string[] = [];
+      });
+      // Subir nuevas imágenes si hay
+      if (updateFile) {
       let idx = 0;
       for (const file of galeriaFiles) {
-
+        try {
         const formData = new FormData();
         formData.append("file", file);
-        if (portadaIndex === idx) {
-          formData.append("portada", idx.toString());
-        } else {
-          formData.append("portada", "false");
+        formData.append("portada", portadaIndex === idx ? idx.toString() : "false");
+        const response = await apiClient<{ success: boolean, message: string}>(`/producto/${productoId}/galeria`, {
+          headers: { "Content-Type": "multipart/form-data" },
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.success) {
+          setError(response.message);
+          return;
         }
-
-
-        const galeriaRes = await apiClient<{ result: { success: boolean, message: string } }>(
-          `/producto/${productoResponse.id}/galeria`,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-            method: "POST",
-            body: formData,
-          }
-        );
-
-        if (!galeriaRes.result.success) {
-          setError(" Se ha guardado el producto pero no se han subido las imágenes. Error: " + galeriaRes.result.message + ". Se redirigirá a la edicion del producto en 2 segundos.");
-        }
-
         idx++;
+        } catch (err: any) {
+          setError(err.message || "Error al actualizar la galería");
+          return
+        }
       }
 
-      setSuccess("Producto creado correctamente");
+    }
+
+      setSuccess("Producto actualizado correctamente");
+
       setTimeout(() => {
-      setSuccess(null);
-      router.push("/core/administration/producto");
+        setSuccess(null);
+        router.push("/core/administration/producto");
       }, 2000);
     } catch (err: any) {
-      setError(err.message || "Error al crear el producto");
+      setError(err.message || "Error al actualizar el producto");
     } finally {
       setSaving(false);
     }
+  };
+
+  const handlePortadaChange = (idx: number) => {
+    setPortadaIndex(idx);
+    setUpdateFile(true);
   };
 
   const handleBack = () => {
@@ -191,9 +212,9 @@ function InsertProductoPage() {
               </Button>
               <ImagePlus className="h-8 w-8 text-blue-600" />
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">Nuevo Producto</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Editar Producto</h1>
                 <p className="text-muted-foreground">
-                  Completa la información del producto
+                  Modifica la información del producto
                 </p>
               </div>
             </div>
@@ -207,7 +228,7 @@ function InsertProductoPage() {
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {saving ? "Guardando..." : "Guardar Producto"}
+              {saving ? "Guardando..." : "Actualizar Producto"}
             </Button>
           </div>
 
@@ -335,32 +356,13 @@ function InsertProductoPage() {
             </div>
             {/* Previsualización */}
             <div >
-              <Card className="shadow-lg border-blue-200 p-8 mb-8 mx-2">
-                <CardHeader>
-                  <CardTitle>Vista previa en el market</CardTitle>
-                  <CardDescription>Así se verá tu producto publicado</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center space-y-6">
-                  {galeriaPreviews.length > 0 ? (
-                    <img
-                      src={galeriaPreviews[portadaIndex]}
-                      alt="Portada"
-                      className="w-40 h-40 object-cover rounded border"
-                    />
-                  ) : (
-                    <div className="w-40 h-40 flex items-center justify-center bg-gray-100 text-gray-400 rounded border">
-                      Sin imagen
-                    </div>
-                  )}
-                  <div className="w-full text-center">
-                    <h2 className="text-lg font-bold">{nombre || "Nombre del producto"}</h2>
-                    <p className="text-sm text-gray-500">{descripcion || "Descripción del producto"}</p>
-                    <p className="text-xl font-semibold text-blue-600 mt-2">
-                      {precio > 0 ? `$${precio}` : "$0.00"}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <ProductoPreviewCard
+                galeriaPreviews={galeriaPreviews}
+                portadaIndex={portadaIndex}
+                nombre={nombre}
+                descripcion={descripcion}
+                precio={precio}
+              />
             </div>
           </div>
 
@@ -384,7 +386,7 @@ function InsertProductoPage() {
                       title="Eliminar imagen"
                       style={{ lineHeight: 1 }}
                     >
-                      
+                      ×
                     </button>
                     <img
                       src={src}
@@ -396,7 +398,7 @@ function InsertProductoPage() {
                         type="radio"
                         name="portada"
                         checked={portadaIndex === idx}
-                        onChange={() => setPortadaIndex(idx)}
+                        onChange={() => handlePortadaChange(idx)}
                         className="mr-1"
                       />
                       Portada
@@ -415,7 +417,7 @@ function InsertProductoPage() {
 export default function PageWithSuspense() {
   return (
     <Suspense fallback={<div>Cargando...</div>}>
-      <InsertProductoPage />
+      <UpdateProductoPage />
     </Suspense>
   );
 }
